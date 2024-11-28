@@ -378,9 +378,6 @@ Ensure that your `Makefile` is correctly indented using **tabs**, not spaces. He
 # Compiler
 CXX = g++
 
-# Compiler Flags
-CXXFLAGS = -Wall -Wextra -O2
-
 # Source Files
 SRCS = final-project.cpp
 
@@ -398,11 +395,11 @@ all: $(TARGET)
 
 # Link the executable
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+	$(CXX) -o $(TARGET) $(OBJS) $(LIBS)
 
 # Compile source files into object files
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) -c $< -o $@
 
 # Clean build files
 clean:
