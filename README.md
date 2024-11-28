@@ -1,7 +1,5 @@
 # Orator
 
-![Spherical Cap](https://via.placeholder.com/800x400?text=Spherical+Cap+Renderer+Screenshot)
-
 ## Table of Contents
 
 - [Introduction](#introduction)
