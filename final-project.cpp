@@ -179,7 +179,6 @@ void drawConcaveInnerCircle(int uSteps, int vSteps) {
 
     float innerRadius = sin(phi_max) * innerRadiusFactor;
     float zBase = cos(phi_max); // Z-coordinate of the flat base
-    float radius = innerRadius;
     float maxDepth = concaveDepth; // Maximum depth of the concavity
 
     for (int j = 0; j < vSteps; ++j) {
