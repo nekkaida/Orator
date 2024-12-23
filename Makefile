@@ -1,34 +1,49 @@
-# Makefile for OpenGL Spherical Cap Renderer
+#########################################
+# Makefile for the "orator" Project
+# 
+# - Builds an executable called "orator"
+# - Links against OpenGL, GLUT, and SDL2
+#########################################
 
 # Compiler
-CXX = g++
+CXX       = g++
 
-# Source Files
-SRCS = final-project.cpp
+# Compiler flags:
+#   -Wall      : enable common compiler warnings
+#   -std=c++11 : enable C++11 features (adjust as needed)
+CXXFLAGS  = -Wall -std=c++11
 
-# Object Files
-OBJS = $(SRCS:.cpp=.o)
+# Libraries to link against:
+#   -lGL   : OpenGL
+#   -lGLU  : OpenGL Utility
+#   -lglut : GLUT
+#   -lSDL2 : SDL2
+LIBS      = -lGL -lGLU -lglut -lSDL2
 
-# Executable Name
-TARGET = final-project
+# If SDL2 or other libraries are in non-standard paths, add them here:
+#   Example:
+#   CXXFLAGS += -I/usr/local/include
+#   LIBS     += -L/usr/local/lib
 
-# Libraries
-LIBS = -lGL -lGLU -lglut -lm
+# Name of the final executable
+TARGET    = orator
 
-# Default Target
+# Source files (add more .cpp files if you have them)
+SOURCES   = orator.cpp
+
+#########################################
+# Default rule
+#########################################
 all: $(TARGET)
 
-# Link the executable
-$(TARGET): $(OBJS)
-	$(CXX) -o $(TARGET) $(OBJS) $(LIBS)
+#########################################
+# Build the executable
+#########################################
+$(TARGET): $(SOURCES)
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LIBS)
 
-# Compile source files into object files
-%.o: %.cpp
-	$(CXX) -c $< -o $@
-
-# Clean build files
+#########################################
+# Clean rule - remove the executable
+#########################################
 clean:
-	rm -f $(OBJS) $(TARGET)
-
-# Phony Targets
-.PHONY: all clean
+	rm -f $(TARGET)

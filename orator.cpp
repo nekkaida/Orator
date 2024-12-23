@@ -1,8 +1,5 @@
 /**********************************************************
- *  Spherical Cap with Planar Shadow + Simple SDL2 Audio
- *  ------------------------------------------------------
- *  Compile (Linux example):
- *    g++ main.cpp -lGL -lGLU -lglut -lSDL2 -o speakerApp
+ *  Orator (Speaker)
  **********************************************************/
 
 #include <GL/glut.h>
