@@ -1,12 +1,6 @@
 /**********************************************************
- *  Spherical Cap with Planar Shadow + Simple SDL2 Audio
- *  
- *  COMPILE EXAMPLE (Linux):
- *    g++ main.cpp -lGL -lGLU -lglut -lSDL2 -o speakerApp
- *  
- *  RUN:
- *    ./speakerApp
- *  
+ *  Orator  
+ * 
  *  Make sure "mySound.wav" is present in the working dir,
  *  or change initAudio(...) to point to a valid .wav path.
  **********************************************************/
@@ -195,7 +189,7 @@ void drawFoundation()
     glColor3f(1.0f, 1.0f, 1.0f);   // Color it white
     glNormal3f(0.0f, 0.0f, 1.0f);  // Upward-facing normal for light calculations
 
-    float z = -9.5f;         // The floor plane's Z coordinate
+    float z = -10.0f;         // The floor plane's Z coordinate
 
     // We draw a large quad from (-20,-20) to (+20,+20) at z = -9.5
     glBegin(GL_QUADS);
