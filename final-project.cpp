@@ -9,7 +9,7 @@
 #endif
 
 // -----------------------------------------------------
-// Global toggles/IDs (similar to your original code)
+// Global toggles/IDs
 // -----------------------------------------------------
 bool textureEnabled = true;         // Toggle texture
 int smoothShading   = 1;            // Toggle smooth shading
@@ -17,7 +17,7 @@ int depthTestEnabled= 1;            // Toggle depth testing
 GLuint textureID;                   // Checkerboard texture
 
 // -----------------------------------------------------
-// Camera variables (based on Weierstrass sample style)
+// Camera variables
 // -----------------------------------------------------
 float cameraAngleX = 0.0f;
 float cameraAngleY = 30.0f;  // Start the camera slightly elevated
@@ -76,7 +76,7 @@ void generateTexture() {
 }
 
 // -----------------------------------------------------
-// Floor (Foundation) at z = -9.5, same as Weierstrass sample
+// Floor (Foundation) at z = -9.5
 // -----------------------------------------------------
 void drawFoundation() {
     glPushMatrix();
@@ -96,7 +96,6 @@ void drawFoundation() {
 
 // -----------------------------------------------------
 // Compute a Shadow Matrix 
-// (Same approach as the Weierstrass example)
 // -----------------------------------------------------
 void computeShadowMatrix(GLfloat shadowMat[16],
                          const GLfloat lightPos[4],
@@ -319,7 +318,7 @@ void initGL() {
 }
 
 // -----------------------------------------------------
-// Timer (like your Weierstrass example) 
+// Timer 
 // We'll rotate shape automatically
 // -----------------------------------------------------
 void timer(int value) {
@@ -371,7 +370,6 @@ void display() {
     glPopMatrix();
 
     // 2) Draw the shadow 
-    //    Using the shadow matrix approach from Weierstrass example
     GLfloat shadowMatrix[16];
     computeShadowMatrix(shadowMatrix, lightPosition, planeFloor);
 
