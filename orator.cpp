@@ -1,18 +1,16 @@
 /**********************************************************
  *  Orator  
  * 
- *  Make sure "mySound.wav" is present in the working dir,
- *  or change initAudio(...) to point to a valid .wav path.
+ *  This project renders a 3D spherical cap resembling a speaker,
+ *  projects its shadow onto a floor, and includes interactive
+ *  controls for camera movement and object rotation.
  **********************************************************/
 
 // ------------------ Standard Includes -------------------
 #include <GL/glut.h>   // GLUT for windowing/input, plus OpenGL
-#include <math.h>      // math functions like sin, cos
-#include <stdlib.h>    // for exit(), etc.
-#include <stdio.h>     // for printf
-
-// ------------------ SDL2 Audio Includes -----------------
-#include <SDL2/SDL.h>  // SDL for audio (and more if needed)
+#include <math.h>      // Math functions like sin, cos
+#include <stdlib.h>    // For exit(), etc.
+#include <stdio.h>     // For printf
 
 /* If M_PI isn't defined by math.h in some environments,
  * define it manually here. */
@@ -21,88 +19,8 @@
 #endif
 
 // --------------------------------------------------------
-// SDL AUDIO GLOBALS
+// SPHERICAL CAP + SHADOW PARAMETERS
 // --------------------------------------------------------
-/* 
-   SDL_AudioSpec is a struct telling SDL the audio format 
-   (frequency, channels, etc.). 
-   audioBuffer will point to the raw WAV data in memory.
-   audioLength is how many bytes that buffer holds.
-   audioDeviceID is the numeric handle for our opened audio device.
-*/
-static SDL_AudioSpec   audioSpec;            // Describes audio format
-static Uint8*          audioBuffer   = NULL; // Pointer to WAV data
-static Uint32          audioLength   = 0;    // Byte size of audio
-static SDL_AudioDeviceID audioDeviceID = 0;  // ID of opened audio device
-
-
-/**********************************************************
- * initAudio(...) - Initializes SDL, loads WAV, plays audio
- **********************************************************/
-bool initAudio(const char* filename) 
-{
-    // Initialize only the audio subsystem of SDL.
-    // If it fails, print error and return false.
-    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
-        printf("SDL_Init AUDIO error: %s\n", SDL_GetError());
-        return false;
-    }
-
-    // Load the specified WAV file into memory (audioBuffer).
-    // Also fill in audioSpec, and set audioLength (the size of the file in bytes).
-    if (!SDL_LoadWAV(filename, &audioSpec, &audioBuffer, &audioLength)) {
-        printf("SDL_LoadWAV Error: %s\n", SDL_GetError());
-        return false;
-    }
-
-    // Open an audio device with the same format as the loaded WAV.
-    // NULL = default device, 0 = not capturing audio (we are playing),
-    // &audioSpec = the desired format. The returned device ID is stored in audioDeviceID.
-    audioDeviceID = SDL_OpenAudioDevice(NULL, 0, &audioSpec, NULL, 0);
-    // If we failed to open the device, free the WAV data and return false.
-    if (!audioDeviceID) {
-        printf("SDL_OpenAudioDevice Error: %s\n", SDL_GetError());
-        SDL_FreeWAV(audioBuffer);
-        return false;
-    }
-
-    // Unpause the device (0 = unpause), allowing audio playback to start.
-    SDL_PauseAudioDevice(audioDeviceID, 0);
-
-    // Queue the entire WAV data to be played.
-    // SDL will play until it finishes the queued buffer.
-    SDL_QueueAudio(audioDeviceID, audioBuffer, audioLength);
-
-    // If we reach here, everything succeeded.
-    return true;
-}
-
-
-/**********************************************************
- * cleanupAudio() - Shuts down SDL audio, frees resources
- **********************************************************/
-void cleanupAudio() 
-{
-    // If we have a valid device ID, close it to release resources.
-    if (audioDeviceID != 0) {
-        SDL_CloseAudioDevice(audioDeviceID);
-        audioDeviceID = 0;
-    }
-    // If we loaded a WAV file, free the buffer.
-    if (audioBuffer) {
-        SDL_FreeWAV(audioBuffer);
-        audioBuffer = NULL;
-    }
-    // Quit all SDL subsystems (including audio).
-    // Alternatively, could use SDL_QuitSubSystem(SDL_INIT_AUDIO)
-    // if you only want to close audio and keep other SDL features.
-    SDL_Quit();
-}
-
-
-/**********************************************************
- * SPHERICAL CAP + SHADOW PARAMETERS
- **********************************************************/
 // Toggles and IDs
 bool  textureEnabled      = true;  // Switch for checkerboard texture
 int   smoothShading       = 1;     // 1 = GL_SMOOTH, 0 = GL_FLAT
@@ -126,9 +44,9 @@ float rotationX           = 0.0f;  // Rotation around X set by mouse drag
 float rotationY           = 0.0f;  // Rotation around Y set by mouse drag
 
 // Spherical Cap + Ring geometry parameters
-const float phi_max          = (3.0f * M_PI) / 4.0f; // how big the spherical cap is (angle)
-const float innerRadiusFactor= 0.4f;  // ratio: inner ring radius / outer ring radius
-const float concaveDepth     = 0.1f;  // depth for the concavity in center
+const float phi_max          = (3.0f * M_PI) / 4.0f; // How big the spherical cap is (angle)
+const float innerRadiusFactor= 0.4f;  // Ratio: inner ring radius / outer ring radius
+const float concaveDepth     = 0.1f;  // Depth for the concavity in center
 
 // Shadow plane & light
 // The "floor" is at z=-9.5 => plane eqn: z+9.5=0 => {0,0,1,9.5}
@@ -136,11 +54,10 @@ GLfloat planeFloor[4] = { 0.0f, 0.0f, 1.0f, 9.5f };
 // A point light in 3D space at (5,5,5), w=1 means it's positional (not directional).
 GLfloat lightPosition[4] = { 5.0f, 5.0f, 5.0f, 1.0f };
 
-
-/**********************************************************
- * TEXTURE GENERATION (Checkerboard)
- **********************************************************/
-#define TEX_SIZE 64  // we'll make a 64x64 texture
+// --------------------------------------------------------
+// TEXTURE GENERATION (Checkerboard)
+// --------------------------------------------------------
+#define TEX_SIZE 64  // We'll make a 64x64 texture
 
 void generateTexture() 
 {
@@ -179,6 +96,9 @@ void generateTexture()
                  0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
 }
 
+// --------------------------------------------------------
+// DRAWING FUNCTIONS
+// --------------------------------------------------------
 
 /**********************************************************
  * drawFoundation() - Draws a big floor at z = -9.5
@@ -201,7 +121,6 @@ void drawFoundation()
 
     glPopMatrix();           // Restore transform
 }
-
 
 /**********************************************************
  * computeShadowMatrix(...) - Creates a 4x4 shadow projection
@@ -243,7 +162,6 @@ void computeShadowMatrix(GLfloat shadowMat[16],
     shadowMat[15] = dot - lightPos[3]*plane[3];
 }
 
-
 /**********************************************************
  * drawSphericalCap(...) - draws partial sphere from phi=0 to phi=phi_max
  **********************************************************/
@@ -260,9 +178,9 @@ void drawSphericalCap(int uSteps, int vSteps)
 
     // We subdivide the sphere in the 'u' (theta) direction
     // and the 'v' (phi) direction.
-    float dTheta = (2.0f * M_PI) / uSteps; // full 360 deg / uSteps
-    float dPhi   = phi_max / vSteps;      // from 0..phi_max
-    float radius = 1.0f;                  // radius of sphere
+    float dTheta = (2.0f * M_PI) / uSteps; // Full 360 deg / uSteps
+    float dPhi   = phi_max / vSteps;      // From 0..phi_max
+    float radius = 1.0f;                  // Radius of sphere
 
     // Loop over longitude slices
     for (int i = 0; i < uSteps; ++i) {
@@ -297,10 +215,9 @@ void drawSphericalCap(int uSteps, int vSteps)
                 glVertex3f(x, y, z);
             }
         }
-        glEnd(); // end quad strip
+        glEnd(); // End quad strip
     }
 }
-
 
 /**********************************************************
  * drawFlatOuterRing(...) - ring around the spherical cap
@@ -325,7 +242,7 @@ void drawFlatOuterRing(int uSteps)
     // We'll build a triangle strip from outer radius to inner radius.
     glBegin(GL_TRIANGLE_STRIP);
     for (int i = 0; i <= uSteps; ++i) {
-        // angle from 0..2π
+        // Angle from 0..2π
         float theta = i * (2.0f * M_PI) / uSteps;
         float cosTheta = cos(theta);
         float sinTheta = sin(theta);
@@ -353,7 +270,6 @@ void drawFlatOuterRing(int uSteps)
     }
     glEnd();
 }
-
 
 /**********************************************************
  * drawConcaveInnerCircle(...) - concavity in the center
@@ -436,9 +352,12 @@ void drawConcaveInnerCircle(int uSteps, int vSteps)
     }
 }
 
+// --------------------------------------------------------
+// LIGHTING SETUP
+// --------------------------------------------------------
 
 /**********************************************************
- * initLighting() - basic lighting setup
+ * initLighting() - Basic lighting setup
  **********************************************************/
 void initLighting() 
 {
@@ -470,9 +389,8 @@ void initLighting()
     glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 }
 
-
 /**********************************************************
- * initGL() - sets up texture, lighting, background color
+ * initGL() - Sets up texture, lighting, background color
  **********************************************************/
 void initGL() 
 {
@@ -487,6 +405,9 @@ void initGL()
     glShadeModel(smoothShading ? GL_SMOOTH : GL_FLAT);
 }
 
+// --------------------------------------------------------
+// ANIMATION
+// --------------------------------------------------------
 
 /**********************************************************
  * timer(...) - Called periodically by GLUT to animate
@@ -505,6 +426,9 @@ void timer(int value)
     glutTimerFunc(16, timer, 0);
 }
 
+// --------------------------------------------------------
+// RENDERING
+// --------------------------------------------------------
 
 /**********************************************************
  * display() - Main rendering function
@@ -582,7 +506,6 @@ void display()
     glutSwapBuffers();
 }
 
-
 /**********************************************************
  * reshape(...) - Called when window is resized
  **********************************************************/
@@ -603,6 +526,9 @@ void reshape(int w, int h)
     glMatrixMode(GL_MODELVIEW);
 }
 
+// --------------------------------------------------------
+// INPUT HANDLING
+// --------------------------------------------------------
 
 /**********************************************************
  * keyboard(...) - Handle normal key presses
@@ -612,7 +538,6 @@ void keyboard(unsigned char key, int x, int y)
     switch(key) {
         // ESC: exit
         case 27:
-            cleanupAudio(); // close audio
             exit(0);
             break;
         // 't': toggle texture
@@ -637,27 +562,25 @@ void keyboard(unsigned char key, int x, int y)
     glutPostRedisplay();
 }
 
-
 /**********************************************************
  * specialKeys(...) - Handle arrow keys for camera angles
  **********************************************************/
 void specialKeys(int key, int x, int y) 
 {
-    const float angleStep = 5.0f; // degrees per key press
+    const float angleStep = 5.0f; // Degrees per key press
     if(key == GLUT_KEY_LEFT) {
         cameraAngleX -= angleStep;
     } else if(key == GLUT_KEY_RIGHT) {
         cameraAngleX += angleStep;
     } else if(key == GLUT_KEY_UP) {
         cameraAngleY += angleStep;
-        if(cameraAngleY > 89.f) cameraAngleY = 89.f; // avoid flipping
+        if(cameraAngleY > 89.f) cameraAngleY = 89.f; // Avoid flipping
     } else if(key == GLUT_KEY_DOWN) {
         cameraAngleY -= angleStep;
         if(cameraAngleY < -89.f) cameraAngleY = -89.f;
     }
     glutPostRedisplay();
 }
-
 
 /**********************************************************
  * mouseButton(...) - Called when mouse buttons are pressed
@@ -677,7 +600,6 @@ void mouseButton(int button, int state, int x, int y)
         }
     }
 }
-
 
 /**********************************************************
  * mouseMotion(...) - Called when mouse moves while dragging
@@ -702,6 +624,9 @@ void mouseMotion(int x, int y)
     }
 }
 
+// --------------------------------------------------------
+// MAIN FUNCTION
+// --------------------------------------------------------
 
 /**********************************************************
  * main(...) - Program entry point
@@ -717,32 +642,23 @@ int main(int argc, char** argv)
     // Create a window with a title
     glutCreateWindow("Orator");
 
-    // 2) Initialize SDL Audio with a WAV file
-    if (!initAudio("mySound.wav")) {
-        // If audio fails, warn but continue
-        printf("Warning: Failed to init audio or load WAV.\n");
-    }
-
-    // 3) Initialize OpenGL states (texture, lighting, etc.)
+    // 2) Initialize OpenGL states (texture, lighting, etc.)
     initGL();
 
-    // 4) Register GLUT callbacks
-    glutDisplayFunc(display);     // called to draw each frame
-    glutReshapeFunc(reshape);     // called when window is resized
-    glutKeyboardFunc(keyboard);   // normal key events
-    glutSpecialFunc(specialKeys); // arrow keys
-    glutMouseFunc(mouseButton);   // mouse clicks
-    glutMotionFunc(mouseMotion);  // mouse dragging
+    // 3) Register GLUT callbacks
+    glutDisplayFunc(display);     // Called to draw each frame
+    glutReshapeFunc(reshape);     // Called when window is resized
+    glutKeyboardFunc(keyboard);   // Normal key events
+    glutSpecialFunc(specialKeys); // Arrow keys
+    glutMouseFunc(mouseButton);   // Mouse clicks
+    glutMotionFunc(mouseMotion);  // Mouse dragging
 
-    // Start a timer to rotate shape at about 60fps (16ms)
+    // 4) Start a timer to rotate shape at about 60fps (16ms)
     glutTimerFunc(16, timer, 0);
 
     // 5) Enter the infinite main loop
     //    (GLUT will now handle window events and call callbacks)
     glutMainLoop();
 
-    // This line is typically never reached (GLUT doesn’t return),
-    // but if it does, we clean up the audio before exiting.
-    cleanupAudio();
     return 0;
 }
